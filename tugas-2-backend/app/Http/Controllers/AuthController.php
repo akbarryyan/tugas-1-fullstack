@@ -50,4 +50,35 @@ class AuthController extends Controller
             'message' => 'Logout berhasil',
         ]);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $admin = $request->user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:admins,email,' . $admin->id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $admin->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Profile berhasil diperbarui',
+            'data' => [
+                'admin' => [
+                    'id' => $admin->id,
+                    'name' => $admin->name,
+                    'username' => $admin->username,
+                    'phone' => $admin->phone,
+                    'email' => $admin->email,
+                ],
+            ],
+        ]);
+    }
 }

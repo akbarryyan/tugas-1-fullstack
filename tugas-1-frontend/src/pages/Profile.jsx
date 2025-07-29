@@ -38,14 +38,26 @@ const Profile = () => {
       if (!formData.email.trim()) {
         throw new Error("Email is required");
       }
+      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+        throw new Error("Please enter a valid email address");
+      }
 
-      // Simulate API loading delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Update profile via API
+      const result = await updateProfile({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+      });
 
-      // Update profile
-      updateProfile(formData);
-      setSuccess("Profile updated successfully!");
-      showNotification("success", "Profile updated successfully!");
+      if (result.success) {
+        setSuccess("Profile updated successfully!");
+        showNotification(
+          "success",
+          result.message || "Profile updated successfully!"
+        );
+      } else {
+        throw new Error(result.message || "Failed to update profile");
+      }
     } catch (err) {
       const errorMessage = err.message || "Failed to update profile";
       setError(errorMessage);
@@ -415,6 +427,81 @@ const Profile = () => {
                       : "1px solid rgba(229, 231, 235, 0.8)",
                   }}
                 >
+                  {/* Error/Success Messages */}
+                  {(error || success) && (
+                    <div className="mb-4">
+                      {error && (
+                        <div
+                          className="rounded-lg p-4 border-l-4"
+                          style={{
+                            background: isDark
+                              ? "rgba(69, 10, 10, 0.3)"
+                              : "rgba(254, 242, 242, 0.8)",
+                            borderLeftColor: "#ef4444",
+                          }}
+                        >
+                          <div className="flex">
+                            <svg
+                              className="w-5 h-5 mr-3 flex-shrink-0"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                              style={{ color: "#ef4444" }}
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <p
+                              className="text-sm"
+                              style={{
+                                color: isDark ? "#fca5a5" : "#991b1b",
+                              }}
+                            >
+                              {error}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {success && (
+                        <div
+                          className="rounded-lg p-4 border-l-4"
+                          style={{
+                            background: isDark
+                              ? "rgba(5, 46, 22, 0.3)"
+                              : "rgba(240, 253, 244, 0.8)",
+                            borderLeftColor: "#10b981",
+                          }}
+                        >
+                          <div className="flex">
+                            <svg
+                              className="w-5 h-5 mr-3 flex-shrink-0"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                              style={{ color: "#10b981" }}
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <p
+                              className="text-sm"
+                              style={{
+                                color: isDark ? "#86efac" : "#065f46",
+                              }}
+                            >
+                              {success}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex justify-end space-x-3">
                     <button
                       type="button"

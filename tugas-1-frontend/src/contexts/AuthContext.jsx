@@ -90,10 +90,41 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const updateProfile = (newData) => {
-    const updatedUser = { ...user, ...newData };
-    localStorage.setItem("user_data", JSON.stringify(updatedUser));
-    setUser(updatedUser);
+  const updateProfile = async (newData) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newData),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        const updatedUser = data.data.admin;
+        localStorage.setItem("user_data", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        return { success: true, message: data.message };
+      }
+
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error("Update profile error:", error);
+      return {
+        success: false,
+        message: error.message || "Gagal memperbarui profile",
+      };
+    }
   };
 
   const value = {
