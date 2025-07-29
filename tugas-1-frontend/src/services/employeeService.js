@@ -138,26 +138,32 @@ export const getEmployees = async (filters = {}) => {
 // Create new employee via API
 export const createEmployee = async (employeeData) => {
   try {
-    const formData = new FormData();
+    const payload = {
+      name: employeeData.name,
+      phone: employeeData.phone,
+      division: employeeData.division,
+      position: employeeData.position,
+    };
 
+    // Add image URL if provided
     if (employeeData.image) {
-      formData.append("image", employeeData.image);
+      payload.image = employeeData.image;
     }
-    formData.append("name", employeeData.name);
-    formData.append("phone", employeeData.phone);
-    formData.append("division", employeeData.division);
-    formData.append("position", employeeData.position);
+
+    console.log("Creating employee with payload:", payload);
 
     const response = await fetch(
       `${API_CONFIG.BASE_URL}${ENDPOINTS.EMPLOYEES}`,
       {
         method: "POST",
-        headers: createHeaders(true), // isFormData = true
-        body: formData,
+        headers: createHeaders(), // JSON headers
+        body: JSON.stringify(payload),
       }
     );
 
+    console.log("Create employee response status:", response.status);
     const data = await handleResponse(response);
+    console.log("Create employee response data:", data);
 
     if (data.status === "success") {
       // Trigger storage change event to update UI
@@ -191,27 +197,32 @@ export const createEmployee = async (employeeData) => {
 // Update employee via API
 export const updateEmployee = async (id, employeeData) => {
   try {
-    const formData = new FormData();
+    const payload = {
+      name: employeeData.name,
+      phone: employeeData.phone,
+      division: employeeData.division,
+      position: employeeData.position,
+    };
 
-    if (employeeData.image && typeof employeeData.image !== "string") {
-      formData.append("image", employeeData.image);
+    // Add image URL if provided
+    if (employeeData.image) {
+      payload.image = employeeData.image;
     }
-    formData.append("name", employeeData.name);
-    formData.append("phone", employeeData.phone);
-    formData.append("division", employeeData.division);
-    formData.append("position", employeeData.position);
-    formData.append("_method", "PUT");
+
+    console.log("Updating employee with payload:", payload);
 
     const response = await fetch(
       `${API_CONFIG.BASE_URL}${ENDPOINTS.EMPLOYEES}/${id}`,
       {
-        method: "POST", // Laravel form spoofing requires POST with _method
-        headers: createHeaders(true), // isFormData = true
-        body: formData,
+        method: "PUT",
+        headers: createHeaders(), // JSON headers
+        body: JSON.stringify(payload),
       }
     );
 
+    console.log("Update employee response status:", response.status);
     const data = await handleResponse(response);
+    console.log("Update employee response data:", data);
 
     if (data.status === "success") {
       // Trigger storage change event to update UI

@@ -22,7 +22,7 @@ class UpdateEmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|string|url|max:255',
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'division' => 'required|uuid|exists:divisions,id',
@@ -38,9 +38,8 @@ class UpdateEmployeeRequest extends FormRequest
             'division.required' => 'Divisi wajib dipilih',
             'division.exists' => 'Divisi tidak valid',
             'position.required' => 'Posisi/jabatan wajib diisi',
-            'image.image' => 'File harus berupa gambar',
-            'image.mimes' => 'Format gambar harus jpeg, png, jpg, atau gif',
-            'image.max' => 'Ukuran gambar maksimal 2MB',
+            'image.url' => 'Image harus berupa URL yang valid',
+            'image.max' => 'URL image maksimal 255 karakter',
         ];
     }
 
