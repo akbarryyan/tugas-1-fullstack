@@ -17,6 +17,12 @@ const createHeaders = (isFormData = false) => {
   headers["Accept"] = "application/json";
 
   const token = getAuthToken();
+  console.log(
+    "Auth token from getAuthToken():",
+    token ? "exists" : "not found"
+  );
+  console.log("Token value:", token);
+
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -54,19 +60,27 @@ const triggerStorageChange = (key, newValue) => {
 // Get all divisions from API
 export const getDivisions = async (name = "") => {
   try {
+    console.log("getDivisions called with name:", name);
+
     const url = new URL(`${API_CONFIG.BASE_URL}${ENDPOINTS.DIVISIONS}`);
     if (name) {
       url.searchParams.append("name", name);
     }
+
+    console.log("Making request to:", url.toString());
 
     const response = await fetch(url, {
       method: "GET",
       headers: createHeaders(),
     });
 
+    console.log("Response status:", response.status);
+
     const data = await handleResponse(response);
+    console.log("Raw divisions response data:", data);
 
     if (data.status === "success") {
+      console.log("Divisions success, returning:", data.data.divisions);
       return {
         success: true,
         data: data.data.divisions,

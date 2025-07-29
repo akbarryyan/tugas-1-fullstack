@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
       if (data.status === "success") {
         const { token, admin } = data.data;
 
+        console.log("Login successful, storing token:", token);
         localStorage.setItem("auth_token", token);
         localStorage.setItem("user_data", JSON.stringify(admin));
         setUser(admin);

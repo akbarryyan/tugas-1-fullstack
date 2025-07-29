@@ -21,21 +21,35 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
+        console.log("Loading dashboard data...");
+
         // Get all employees
         const employeesResult = await employeesService.getAll(
           {},
           { page: 1, limit: 100 }
         );
-        const employees = employeesResult.data;
+        console.log("Employees result:", employeesResult);
+        const employees = employeesResult.data || [];
+        console.log("Employees array:", employees);
 
         // Get all divisions
-        const divisions = await divisionsService.getAll();
+        const divisionsResult = await divisionsService.getAll();
+        console.log("Divisions result:", divisionsResult);
+        const divisions = Array.isArray(divisionsResult) ? divisionsResult : [];
+        console.log("Divisions array:", divisions);
 
         // Calculate stats
-        const totalEmployees = employees.length;
-        const totalDivisions = divisions.length;
-        const activeEmployees = employees.length; // All employees are considered active for now
-        const recentEmployees = employees.slice(0, 5); // Last 5 employees
+        const totalEmployees = employees ? employees.length : 0;
+        const totalDivisions = divisions ? divisions.length : 0;
+        const activeEmployees = employees ? employees.length : 0; // All employees are considered active for now
+        const recentEmployees = employees ? employees.slice(0, 5) : []; // Last 5 employees
+
+        console.log("Calculated stats:", {
+          totalEmployees,
+          totalDivisions,
+          activeEmployees,
+          recentEmployees,
+        });
 
         setStats({
           totalEmployees,
