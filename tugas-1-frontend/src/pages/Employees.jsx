@@ -59,7 +59,7 @@ const Employees = () => {
   const loadEmployees = async () => {
     try {
       setLoading(true);
-      const result = employeesService.getAll(filters, {
+      const result = await employeesService.getAll(filters, {
         page: pagination.current_page,
         limit: pagination.per_page,
       });
@@ -67,17 +67,19 @@ const Employees = () => {
       setPagination((prev) => ({ ...prev, ...result.pagination }));
     } catch (error) {
       console.error("Error loading employees:", error);
+      showNotification("error", "Gagal memuat data karyawan");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadDivisions = () => {
+  const loadDivisions = async () => {
     try {
-      const result = divisionsService.getAll();
+      const result = await divisionsService.getAll();
       setDivisions(result);
     } catch (error) {
       console.error("Error loading divisions:", error);
+      showNotification("error", "Gagal memuat data divisi");
     }
   };
 
@@ -109,11 +111,8 @@ const Employees = () => {
     setSubmitLoading(true);
 
     try {
-      // Simulate API loading delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       if (editingEmployee) {
-        employeesService.update(editingEmployee.id, formData);
+        await employeesService.update(editingEmployee.id, formData);
         setShowModal(false);
         setEditingEmployee(null);
         setFormData({
@@ -123,10 +122,10 @@ const Employees = () => {
           position: "",
           image: "",
         });
-        loadEmployees();
+        await loadEmployees();
         showNotification("success", "Employee updated successfully!");
       } else {
-        employeesService.create(formData);
+        await employeesService.create(formData);
         setShowModal(false);
         setEditingEmployee(null);
         setFormData({
@@ -136,7 +135,7 @@ const Employees = () => {
           position: "",
           image: "",
         });
-        loadEmployees();
+        await loadEmployees();
         showNotification("success", "Employee added successfully!");
       }
     } catch (error) {
@@ -178,13 +177,10 @@ const Employees = () => {
 
     setDeleteLoading(true);
     try {
-      // Simulate API loading delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      employeesService.delete(deletingEmployee.id);
+      await employeesService.delete(deletingEmployee.id);
       setShowDeleteModal(false);
       setDeletingEmployee(null);
-      loadEmployees();
+      await loadEmployees();
       showNotification(
         "success",
         `${deletingEmployee.name} has been deleted successfully!`

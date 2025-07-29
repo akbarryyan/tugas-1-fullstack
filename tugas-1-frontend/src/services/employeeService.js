@@ -1,6 +1,47 @@
-// Employee service for local storage management
-const STORAGE_KEY = "employees_data";
-const DIVISIONS_KEY = "divisions_data";
+// Employee service for API integration using native fetch
+import { API_CONFIG, ENDPOINTS } from "../config/api.js";
+
+// Helper function to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem("auth_token");
+};
+
+// Helper function to create headers
+const createHeaders = (isFormData = false) => {
+  const headers = {};
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  headers["Accept"] = "application/json";
+
+  const token = getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
+// Helper function to handle fetch response
+const handleResponse = async (response) => {
+  if (response.status === 401) {
+    // Token expired or invalid, clear storage and redirect to login
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_data");
+    window.location.href = "/";
+    throw new Error("Unauthorized");
+  }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Request failed");
+  }
+
+  return data;
+};
 
 // Helper function to trigger storage change event
 const triggerStorageChange = (key, newValue) => {
@@ -10,213 +51,267 @@ const triggerStorageChange = (key, newValue) => {
   window.dispatchEvent(event);
 };
 
-// Mock divisions data
-const defaultDivisions = [
-  { id: "div-001", name: "Mobile Apps" },
-  { id: "div-002", name: "QA" },
-  { id: "div-003", name: "Full Stack" },
-  { id: "div-004", name: "Backend" },
-  { id: "div-005", name: "Frontend" },
-  { id: "div-006", name: "UI/UX Designer" },
-];
+// Get all divisions from API
+export const getDivisions = async (name = "") => {
+  try {
+    const url = new URL(`${API_CONFIG.BASE_URL}${ENDPOINTS.DIVISIONS}`);
+    if (name) {
+      url.searchParams.append("name", name);
+    }
 
-// Mock employees data
-const defaultEmployees = [
-  {
-    id: "emp-001",
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    name: "John Anderson",
-    phone: "+62 812-3456-7891",
-    division: { id: "div-005", name: "Frontend" },
-    position: "Senior Frontend Developer",
-  },
-  {
-    id: "emp-002",
-    image:
-      "https://images.unsplash.com/photo-1494790108755-2616b9e65a05?w=150&h=150&fit=crop&crop=face",
-    name: "Sarah Wilson",
-    phone: "+62 812-3456-7892",
-    division: { id: "div-006", name: "UI/UX Designer" },
-    position: "Lead UI/UX Designer",
-  },
-  {
-    id: "emp-003",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    name: "Michael Chen",
-    phone: "+62 812-3456-7893",
-    division: { id: "div-004", name: "Backend" },
-    position: "Backend Developer",
-  },
-  {
-    id: "emp-004",
-    image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-    name: "Emily Rodriguez",
-    phone: "+62 812-3456-7894",
-    division: { id: "div-001", name: "Mobile Apps" },
-    position: "Mobile Developer",
-  },
-  {
-    id: "emp-005",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-    name: "David Kim",
-    phone: "+62 812-3456-7895",
-    division: { id: "div-002", name: "QA" },
-    position: "QA Engineer",
-  },
-  {
-    id: "emp-006",
-    image:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
-    name: "Lisa Thompson",
-    phone: "+62 812-3456-7896",
-    division: { id: "div-003", name: "Full Stack" },
-    position: "Full Stack Developer",
-  },
-];
+    const response = await fetch(url, {
+      method: "GET",
+      headers: createHeaders(),
+    });
 
-// Initialize data if not exists
-const initializeData = () => {
-  if (!localStorage.getItem(DIVISIONS_KEY)) {
-    localStorage.setItem(DIVISIONS_KEY, JSON.stringify(defaultDivisions));
-  }
+    const data = await handleResponse(response);
 
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultEmployees));
+    if (data.status === "success") {
+      return {
+        success: true,
+        data: data.data.divisions,
+        pagination: data.pagination,
+      };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    console.error("Error fetching divisions:", error);
+    return {
+      success: false,
+      message: error.message || "Gagal mengambil data divisi",
+    };
   }
 };
 
-// Divisions service
-export const divisionsService = {
-  getAll: (filters = {}) => {
-    const divisions = JSON.parse(localStorage.getItem(DIVISIONS_KEY) || "[]");
-
-    let filtered = divisions;
+// Get all employees from API
+export const getEmployees = async (filters = {}) => {
+  try {
+    const url = new URL(`${API_CONFIG.BASE_URL}${ENDPOINTS.EMPLOYEES}`);
 
     if (filters.name) {
-      filtered = filtered.filter((div) =>
-        div.name.toLowerCase().includes(filters.name.toLowerCase())
-      );
+      url.searchParams.append("name", filters.name);
     }
-
-    return filtered;
-  },
-};
-
-// Employees service
-export const employeesService = {
-  getAll: (filters = {}, pagination = { page: 1, limit: 6 }) => {
-    initializeData();
-
-    const employees = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    let filtered = employees;
-
-    // Apply filters
-    if (filters.name) {
-      filtered = filtered.filter((emp) =>
-        emp.name.toLowerCase().includes(filters.name.toLowerCase())
-      );
-    }
-
     if (filters.division_id) {
-      filtered = filtered.filter(
-        (emp) => emp.division.id === filters.division_id
-      );
+      url.searchParams.append("division_id", filters.division_id);
     }
 
-    // Calculate pagination
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / pagination.limit);
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    const paginatedData = filtered.slice(startIndex, endIndex);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: createHeaders(),
+    });
+
+    const data = await handleResponse(response);
+
+    if (data.status === "success") {
+      return {
+        success: true,
+        data: data.data.employees,
+        pagination: data.pagination,
+      };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    return {
+      success: false,
+      message: error.message || "Gagal mengambil data karyawan",
+    };
+  }
+};
+
+// Create new employee via API
+export const createEmployee = async (employeeData) => {
+  try {
+    const formData = new FormData();
+
+    if (employeeData.image) {
+      formData.append("image", employeeData.image);
+    }
+    formData.append("name", employeeData.name);
+    formData.append("phone", employeeData.phone);
+    formData.append("division", employeeData.division);
+    formData.append("position", employeeData.position);
+
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${ENDPOINTS.EMPLOYEES}`,
+      {
+        method: "POST",
+        headers: createHeaders(true), // isFormData = true
+        body: formData,
+      }
+    );
+
+    const data = await handleResponse(response);
+
+    if (data.status === "success") {
+      // Trigger storage change event to update UI
+      triggerStorageChange("employees_data", Date.now());
+
+      return {
+        success: true,
+        message: data.message,
+      };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    console.error("Error creating employee:", error);
+
+    // Handle validation errors
+    if (error.message.includes("422") || error.message.includes("validation")) {
+      return {
+        success: false,
+        message: "Data tidak valid. Periksa kembali input Anda.",
+      };
+    }
 
     return {
-      data: paginatedData,
+      success: false,
+      message: error.message || "Gagal menambahkan karyawan",
+    };
+  }
+};
+
+// Update employee via API
+export const updateEmployee = async (id, employeeData) => {
+  try {
+    const formData = new FormData();
+
+    if (employeeData.image && typeof employeeData.image !== "string") {
+      formData.append("image", employeeData.image);
+    }
+    formData.append("name", employeeData.name);
+    formData.append("phone", employeeData.phone);
+    formData.append("division", employeeData.division);
+    formData.append("position", employeeData.position);
+    formData.append("_method", "PUT");
+
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${ENDPOINTS.EMPLOYEES}/${id}`,
+      {
+        method: "POST", // Laravel form spoofing requires POST with _method
+        headers: createHeaders(true), // isFormData = true
+        body: formData,
+      }
+    );
+
+    const data = await handleResponse(response);
+
+    if (data.status === "success") {
+      // Trigger storage change event to update UI
+      triggerStorageChange("employees_data", Date.now());
+
+      return {
+        success: true,
+        message: data.message,
+      };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    console.error("Error updating employee:", error);
+
+    return {
+      success: false,
+      message: error.message || "Gagal mengupdate karyawan",
+    };
+  }
+};
+
+// Delete employee via API
+export const deleteEmployee = async (id) => {
+  try {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${ENDPOINTS.EMPLOYEES}/${id}`,
+      {
+        method: "DELETE",
+        headers: createHeaders(),
+      }
+    );
+
+    const data = await handleResponse(response);
+
+    if (data.status === "success") {
+      // Trigger storage change event to update UI
+      triggerStorageChange("employees_data", Date.now());
+
+      return {
+        success: true,
+        message: data.message,
+      };
+    }
+
+    return { success: false, message: data.message };
+  } catch (error) {
+    console.error("Error deleting employee:", error);
+    return {
+      success: false,
+      message: error.message || "Gagal menghapus karyawan",
+    };
+  }
+};
+
+// Legacy support - backwards compatibility for existing components
+export const divisionsService = {
+  getAll: async (filters = {}) => {
+    const result = await getDivisions(filters.name);
+    return result.success ? result.data : [];
+  },
+};
+
+export const employeesService = {
+  getAll: async (filters = {}, pagination = { page: 1, limit: 6 }) => {
+    const result = await getEmployees(filters);
+    if (result.success) {
+      return {
+        data: result.data,
+        pagination: result.pagination,
+      };
+    }
+    return {
+      data: [],
       pagination: {
-        current_page: pagination.page,
+        current_page: 1,
         per_page: pagination.limit,
-        total: total,
-        last_page: totalPages,
-        from: startIndex + 1,
-        to: Math.min(endIndex, total),
+        total: 0,
+        last_page: 1,
+        from: 0,
+        to: 0,
       },
     };
   },
 
-  getById: (id) => {
-    const employees = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return employees.find((emp) => emp.id === id);
+  getById: async (id) => {
+    const result = await getEmployees();
+    if (result.success) {
+      return result.data.find((emp) => emp.id === id);
+    }
+    return null;
   },
 
-  create: (data) => {
-    initializeData();
-    const employees = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const divisions = JSON.parse(localStorage.getItem(DIVISIONS_KEY) || "[]");
-
-    const division = divisions.find((div) => div.id === data.division);
-    if (!division) {
-      throw new Error("Division not found");
+  create: async (data) => {
+    const result = await createEmployee(data);
+    if (!result.success) {
+      throw new Error(result.message);
     }
-
-    const newEmployee = {
-      id: "emp-" + Date.now().toString(),
-      image:
-        data.image ||
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      name: data.name,
-      phone: data.phone,
-      division: division,
-      position: data.position,
-    };
-
-    employees.push(newEmployee);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
-    triggerStorageChange(STORAGE_KEY, employees);
-
-    return newEmployee;
+    return result;
   },
 
-  update: (id, data) => {
-    const employees = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const divisions = JSON.parse(localStorage.getItem(DIVISIONS_KEY) || "[]");
-
-    const index = employees.findIndex((emp) => emp.id === id);
-    if (index === -1) {
-      throw new Error("Employee not found");
+  update: async (id, data) => {
+    const result = await updateEmployee(id, data);
+    if (!result.success) {
+      throw new Error(result.message);
     }
-
-    if (data.division) {
-      const division = divisions.find((div) => div.id === data.division);
-      if (!division) {
-        throw new Error("Division not found");
-      }
-      data.division = division;
-    }
-
-    employees[index] = { ...employees[index], ...data };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
-    triggerStorageChange(STORAGE_KEY, employees);
-
-    return employees[index];
+    return result;
   },
 
-  delete: (id) => {
-    const employees = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const filtered = employees.filter((emp) => emp.id !== id);
-
-    if (filtered.length === employees.length) {
-      throw new Error("Employee not found");
+  delete: async (id) => {
+    const result = await deleteEmployee(id);
+    if (!result.success) {
+      throw new Error(result.message);
     }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-    triggerStorageChange(STORAGE_KEY, filtered);
-    return true;
+    return result;
   },
 };
-
-// Initialize data on module load
-initializeData();

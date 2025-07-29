@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { API_CONFIG, ENDPOINTS } from "../config/api.js";
 
 const AuthContext = createContext();
 
@@ -25,33 +26,67 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (username, password) => {
-    // Static credentials for now
-    if (username === "admin" && password === "pastibisa") {
-      const userData = {
-        id: "admin-001",
-        name: "Admin User",
-        username: "admin",
-        email: "admin@company.com",
-        phone: "+62 812-3456-7890",
-      };
+  const login = async (username, password) => {
+    try {
+      setLoading(true);
 
-      const token = "fake-jwt-token-" + Date.now();
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}${ENDPOINTS.AUTH.LOGIN}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+        }
+      );
 
-      localStorage.setItem("auth_token", token);
-      localStorage.setItem("user_data", JSON.stringify(userData));
-      setUser(userData);
+      const data = await response.json();
 
-      return { success: true, message: "Login successful!" };
+      if (data.status === "success") {
+        const { token, admin } = data.data;
+
+        localStorage.setItem("auth_token", token);
+        localStorage.setItem("user_data", JSON.stringify(admin));
+        setUser(admin);
+
+        return { success: true, message: data.message };
+      }
+
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error("Login error:", error);
+      const message = "Username atau password salah";
+      return { success: false, message };
+    } finally {
+      setLoading(false);
     }
-
-    return { success: false, message: "Invalid username or password!" };
   };
 
-  const logout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_data");
-    setUser(null);
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (token) {
+        await fetch(`${API_CONFIG.BASE_URL}${ENDPOINTS.AUTH.LOGOUT}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      setUser(null);
+    }
   };
 
   const updateProfile = (newData) => {
