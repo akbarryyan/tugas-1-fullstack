@@ -484,41 +484,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                 : "none",
             }}
           >
-            {/* System Status */}
-            <div
-              className="flex items-center justify-between p-3 rounded-lg border"
-              style={{
-                backgroundColor: isDark
-                  ? "rgba(16, 185, 129, 0.1)"
-                  : "rgba(236, 253, 245, 0.8)",
-                borderColor: isDark
-                  ? "rgba(16, 185, 129, 0.3)"
-                  : "rgba(16, 185, 129, 0.2)",
-              }}
-            >
-              <div className="flex items-center space-x-2">
-                <div className="relative">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
-                </div>
-                <span
-                  className="text-xs font-medium"
-                  style={{
-                    color: isDark ? "#10b981" : "#047857",
-                  }}
-                >
-                  System Active
-                </span>
-              </div>
-              <span
-                className="text-xs font-mono"
-                style={{
-                  color: isDark ? "#34d399" : "#059669",
-                }}
-              >
-                v2.1.0
-              </span>
-            </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-2">
