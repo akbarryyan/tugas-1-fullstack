@@ -6,7 +6,6 @@ import {
   employeesService,
   divisionsService,
 } from "../../services/employeeService";
-import { useLocalStorageListener } from "../../hooks/useLocalStorageListener";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
@@ -17,20 +16,21 @@ const Sidebar = ({ isOpen, onClose }) => {
   const [employeeCount, setEmployeeCount] = useState(0);
   const [divisionCount, setDivisionCount] = useState(0);
 
-  // Listen to localStorage changes
-  const employeesData = useLocalStorageListener("employees_data");
-  const divisionsData = useLocalStorageListener("divisions_data");
-
-  // Update counts when data changes
+  // Update counts from database
   useEffect(() => {
-    const updateCounts = () => {
+    const updateCounts = async () => {
       try {
-        // Fetch employees
-        const employeesResponse = employeesService.getAll();
-        setEmployeeCount(employeesResponse.data?.length || 0);
+        // Fetch employees from API
+        const employeesResponse = await employeesService.getAll();
+        // Use pagination total for accurate count, fallback to data length
+        const employeeTotal =
+          employeesResponse.pagination?.total ||
+          employeesResponse.data?.length ||
+          0;
+        setEmployeeCount(employeeTotal);
 
-        // Fetch divisions
-        const divisionsResponse = divisionsService.getAll();
+        // Fetch divisions from API
+        const divisionsResponse = await divisionsService.getAll();
         setDivisionCount(divisionsResponse.length || 0);
       } catch (error) {
         console.error("Error fetching counts:", error);
@@ -41,7 +41,13 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
 
     updateCounts();
-  }, [employeesData, divisionsData]); // Re-run when localStorage data changes
+
+    // Set up interval to update counts every 30 seconds for real-time data
+    const interval = setInterval(updateCounts, 30000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, []); // Only run once on component mount
 
   // Add touch handlers for swipe gestures
   const handleTouchStart = (e) => {
