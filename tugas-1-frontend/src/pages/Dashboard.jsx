@@ -17,6 +17,71 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Add custom CSS for animations
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .scrollbar-thin {
+        scrollbar-width: thin;
+      }
+      
+      .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+        background-color: #d1d5db;
+        border-radius: 6px;
+      }
+      
+      .dark .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+        border-radius: 6px;
+      }
+      
+      .scrollbar-track-transparent::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background-color: #d1d5db;
+        border-radius: 6px;
+      }
+      
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #9ca3af;
+      }
+      
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #6b7280;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  useEffect(() => {
     const loadDashboardData = async () => {
       try {
         setLoading(true);
@@ -267,51 +332,184 @@ const Dashboard = () => {
               : "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
           }}
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2
-              className="text-lg font-semibold"
-              style={{
-                color: isDark ? "#ffffff" : "#111827", // white di dark, gray-900 di light
-              }}
-            >
-              Recent Employees
-            </h2>
+          <div
+            className="flex items-center justify-between mb-6 pb-3 border-b"
+            style={{
+              borderColor: isDark
+                ? "rgba(75, 85, 99, 0.3)"
+                : "rgba(203, 213, 225, 0.4)",
+            }}
+          >
+            <div>
+              <h2
+                className="text-lg font-semibold flex items-center"
+                style={{
+                  color: isDark ? "#ffffff" : "#111827",
+                }}
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{
+                    color: isDark ? "#a5b4fc" : "#4f46e5",
+                  }}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                Recent Employees
+              </h2>
+              <p
+                className="text-xs mt-1"
+                style={{
+                  color: isDark ? "#9ca3af" : "#64748b",
+                }}
+              >
+                Latest 5 employees
+              </p>
+            </div>
             <Link
               to="/employees"
-              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium"
+              className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
+              style={{
+                backgroundColor: isDark
+                  ? "rgba(79, 70, 229, 0.2)"
+                  : "rgba(239, 246, 255, 0.8)",
+                color: isDark ? "#a5b4fc" : "#4f46e5",
+                border: `1px solid ${
+                  isDark ? "rgba(99, 102, 241, 0.3)" : "rgba(79, 70, 229, 0.2)"
+                }`,
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = isDark
+                  ? "rgba(79, 70, 229, 0.3)"
+                  : "rgba(219, 234, 254, 0.9)";
+                e.target.style.boxShadow = "0 4px 12px rgba(79, 70, 229, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = isDark
+                  ? "rgba(79, 70, 229, 0.2)"
+                  : "rgba(239, 246, 255, 0.8)";
+                e.target.style.boxShadow = "none";
+              }}
             >
-              View all →
+              View all
+              <svg
+                className="w-4 h-4 ml-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </Link>
           </div>
 
-          <div className="space-y-4">
-            {stats.recentEmployees.map((employee) => (
-              <div key={employee.id} className="flex items-center space-x-4">
-                <img
-                  src={employee.image}
-                  alt={employee.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+          <div
+            className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent space-y-4 pr-2"
+            style={{
+              maxHeight: "320px", // Limit height to enable scrolling
+            }}
+          >
+            {stats.recentEmployees.map((employee, index) => (
+              <div
+                key={employee.id}
+                className="flex items-center space-x-4 p-3 rounded-lg transition-all duration-200 hover:scale-[1.02]"
+                style={{
+                  backgroundColor: isDark
+                    ? "rgba(55, 65, 81, 0.3)"
+                    : "rgba(248, 250, 252, 0.6)",
+                  animation: `fadeInUp 0.4s ease-out ${index * 0.1}s both`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "rgba(55, 65, 81, 0.5)"
+                    : "rgba(241, 245, 249, 0.8)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0, 0, 0, 0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "rgba(55, 65, 81, 0.3)"
+                    : "rgba(248, 250, 252, 0.6)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <div className="relative">
+                  <img
+                    src={
+                      employee.image ||
+                      "https://via.placeholder.com/40x40?text=👤"
+                    }
+                    alt={employee.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 transition-all duration-200"
+                    style={{
+                      borderColor: isDark
+                        ? "rgba(75, 85, 99, 0.4)"
+                        : "rgba(203, 213, 225, 0.6)",
+                    }}
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/40x40?text=👤";
+                    }}
+                  />
+                  <div
+                    className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 bg-green-400"
+                    style={{
+                      borderColor: isDark ? "#111827" : "#ffffff",
+                    }}
+                    title="Active"
+                  ></div>
+                </div>
                 <div className="flex-1 min-w-0">
                   <p
-                    className="text-sm font-medium truncate"
+                    className="text-sm font-semibold truncate mb-1"
                     style={{
-                      color: isDark ? "#ffffff" : "#111827", // white di dark, gray-900 di light
+                      color: isDark ? "#ffffff" : "#111827",
                     }}
                   >
                     {employee.name}
                   </p>
                   <p
-                    className="text-sm truncate"
+                    className="text-xs truncate"
                     style={{
                       color: isDark ? "#9ca3af" : "#64748b",
                     }}
                   >
-                    {employee.position} • {employee.division.name}
+                    {employee.position}
+                  </p>
+                  <p
+                    className="text-xs truncate mt-1"
+                    style={{
+                      color: isDark ? "#6b7280" : "#94a3b8",
+                    }}
+                  >
+                    📂 {employee.division.name}
                   </p>
                 </div>
                 <div className="flex-shrink-0">
-                  <span className="badge badge-indigo">Active</span>
+                  <span
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: isDark
+                        ? "rgba(34, 197, 94, 0.2)"
+                        : "rgba(220, 252, 231, 0.8)",
+                      color: isDark ? "#4ade80" : "#16a34a",
+                    }}
+                  >
+                    ✓ Active
+                  </span>
                 </div>
               </div>
             ))}
@@ -336,11 +534,20 @@ const Dashboard = () => {
                 />
               </svg>
               <p
+                className="text-sm font-medium mb-2"
                 style={{
                   color: isDark ? "#9ca3af" : "#64748b",
                 }}
               >
                 No employees found
+              </p>
+              <p
+                className="text-xs"
+                style={{
+                  color: isDark ? "#6b7280" : "#94a3b8",
+                }}
+              >
+                Start by adding your first employee
               </p>
             </div>
           )}
