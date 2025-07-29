@@ -17,17 +17,19 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadDashboardData = () => {
+    const loadDashboardData = async () => {
       try {
+        setLoading(true);
+
         // Get all employees
-        const employeesResult = employeesService.getAll(
+        const employeesResult = await employeesService.getAll(
           {},
           { page: 1, limit: 100 }
         );
         const employees = employeesResult.data;
 
         // Get all divisions
-        const divisions = divisionsService.getAll();
+        const divisions = await divisionsService.getAll();
 
         // Calculate stats
         const totalEmployees = employees.length;
