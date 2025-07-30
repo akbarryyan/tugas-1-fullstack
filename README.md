@@ -1,6 +1,6 @@
 # Tugas 3 - Fullstack Integration
 
-Integrasi antara frontend (React + Vite) dan backend (Laravel) untuk sistem manajemen karyawan.
+Integrasi antara frontend Tugas 1 (React + Vite) dan backend Tugas 2 (Laravel) untuk sistem manajemen karyawan.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ Integrasi antara frontend (React + Vite) dan backend (Laravel) untuk sistem mana
 - Composer
 - Node.js 18+
 - NPM/Yarn
-- MySQL/SQLite
+- MySQL
 
 ## Installation & Setup
 
@@ -41,8 +41,7 @@ php artisan key:generate
 5. Configure database in `.env` file:
 
 ```env
-DB_CONNECTION=sqlite
-DB_DATABASE=database/database.sqlite
+DB_CONNECTION=mysql
 ```
 
 6. Run migrations and seeders:
@@ -139,13 +138,12 @@ Frontend akan berjalan di: http://localhost:5173
 - Vite
 - Tailwind CSS 4
 - React Router DOM
-- Axios for HTTP requests
 
 ### Backend
 
 - Laravel 11
 - Laravel Sanctum for authentication
-- MySQL/SQLite database
+- MySQL Database
 - CORS middleware
 
 ## Usage
@@ -189,7 +187,6 @@ tugas-3-fullstack/
 1. **Added HTTP Client**:
 
    - `src/config/api.js` - API configuration
-   - `src/utils/apiClient.js` - Axios instance with interceptors
 
 2. **Updated Services**:
 
